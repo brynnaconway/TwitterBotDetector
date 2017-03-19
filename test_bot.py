@@ -5,8 +5,8 @@ from time import sleep
 
 def file_tweets():
     argfile = "bot_tweets.txt" #str(sys.arg[1])
-    filename=open(argfile, 'r')
-    f=filename.readlines()
+    filename = open(argfile, 'r')
+    f = filename.readlines()
     filename.close()
 
     for line in f: 
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     auth = tweepy.OAuthHandler("sL2BOOaip5M1GZxY9wVJenrtz", "sKrE6ONhuxFE2c1YpaI5BdiDp53N6HL8ILVvubIkbqWQqLMXrh") 
     auth.set_access_token("840213704021049345-X6wFF3URAXSju75ejwY3StLfgtqDIeO", "1XB36ErfJe71f4VnQbrvYVGeVTetKPUwi72VoiBu6HTBo") 
-api = tweepy.API(auth)
+    api = tweepy.API(auth)
 
     file_tweets()
     retweet(1, 0)
