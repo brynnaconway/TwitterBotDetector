@@ -19,6 +19,18 @@ class BotDetector():
 		print followers
 		print friends
 		return float((float(followers)/float(friends)))
+
+		# activity level of user -- how often it tweets and how much it likes other tweets
+	# analyze screenname of user and bio
+	# score function
+	def num_tweets(self, userID):
+		status = self.api.user_timeline(user_id = userID, include_rts = True, count = 200)
+		print "in here"
+		count = 0
+		for tweet in status:
+			count += 1
+			print tweet.text.encode('utf-8')
+		print count
 	
 if __name__ == "__main__":
 	# set up authentication
@@ -31,6 +43,8 @@ if __name__ == "__main__":
 	userID = '965192514'
 	bd = BotDetector(api)
 	print(bd.find_ratio(userID))
+
+	bd.num_tweets(userID)
 		
 		
 		
