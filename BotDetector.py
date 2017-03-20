@@ -6,6 +6,7 @@
 
 import tweepy, sys
 import time
+from textblob import TextBlob
 
 class BotDetector():
 	def __init__(self, api):
@@ -15,11 +16,24 @@ class BotDetector():
 		# find ratio of followers/following
 		user = self.api.get_user(userID)
 		print user.screen_name
-		#follower_ids = []
-		'''for page in tweepy.Cursor(self.api.followers, user_id = userID).pages():
+		follower_ids = []
+		'''C = tweepy.Cursor(self.api.followers, id = userID, count = 200).items()
+		while True:
+			try:
+				follower = C.next()
+				follower_ids.append(follower)
+			except tweepy.TweepError:
+				print "error caught"
+				time.sleep(20)
+				continue
+			except StopIteration:
+				break'''
+
+		#for page in tweepy.Cursor(self.api.followers, id = userID, count = 200).pages():
 			#for follower in page:
-			follower_ids.extend(page)
-			time.sleep(20)'''  # keep getting a rate limit error for this stuff
+			#print "in loop"
+			#follower_ids.extend(page)
+			#time.sleep(20)  # keep getting a rate limit error for this stuff
 
 		#followers = len(follower_ids)
 
@@ -35,10 +49,12 @@ class BotDetector():
 	# this currently only gives max of 200 tweets because that is the request max -- trying to figure out how to get around this
 	def num_tweets(self, userID):
 		status = self.api.user_timeline(user_id = userID, include_rts = True, count = 200)
-		print "in here"
 		count = 0
 		for page in tweepy.Cursor(self.api.user_timeline, user_id = userID, include_rts = True).pages():
 			for tweet in page:
+				testimonial = TextBlob(unicode(tweet.text))
+				print tweet.text.encode('utf-8')
+				print testimonial.sentiment.subjectivity
 				count += 1
 				#print tweet.text.encode('utf-8')
 		print count
@@ -49,7 +65,7 @@ if __name__ == "__main__":
 	auth.set_access_token('3083135683-DER2kEd9yhEbf7qY2q58haf6MJE3yTzXlOaw9rJ', 	'lU8PL9RrGpmhaxqxmasWP6wzYBMHfB1fOw0TZYe71A380')
 
 	# call tweepy API
-	api = tweepy.API(auth)
+	api = tweepy.API(auth, wait_on_rate_limit=True)
 	
 	#userID = '965192514' # efly5's twitter
 	userID = '226222147' # mayor pete's twitter -- giving out the wrong number of statuses
@@ -58,8 +74,3 @@ if __name__ == "__main__":
 	print(bd.find_ratio(userID))
 
 	bd.num_tweets(userID)
-		
-		
-		
-		
-		
