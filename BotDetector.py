@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
 
 # Leah Plofchan, Erin Flynn, Brynna Conway
 # Social Sensing and Cyber Physical Systems Final Project
@@ -18,18 +18,9 @@ class BotDetector():
 		print user.screen_name
 		follower_ids = []
 
-		# BELOW IS WHAT SHOULD WORK WITH THE PAGE LIMIT ERRORS BUT IS NOT
-		# SO I HAVE THE OLD WAY CURRENTLY UNCOMMENTED
-		# TO TEST, UNCOMMENT THESE LINES BELOW AND COMMENT LINE 30
-		#for page in tweepy.Cursor(self.api.followers, id = userID, count = 200).pages():
-			#print "in loop"
-			#follower_ids.extend(page)
-			#time.sleep(20)  # THIS LINE MIGHT NOT BE NECESSARY
-		#followers = len(follower_ids)
-
-		followers = len(self.api.followers_ids(userID))
-		friends = len(self.api.friends_ids(userID))
-		print "followers: ", followers
+		followers = user.followers_count
+		print "followers count: ", followers
+		friends = user.friends_count
 		print "friends (number of people following): ", friends
 		return float((float(followers)/float(friends)))
 
@@ -55,7 +46,7 @@ if __name__ == "__main__":
 	auth.set_access_token('3083135683-DER2kEd9yhEbf7qY2q58haf6MJE3yTzXlOaw9rJ', 	'lU8PL9RrGpmhaxqxmasWP6wzYBMHfB1fOw0TZYe71A380')
 
 	# call tweepy API
-	api = tweepy.API(auth, wait_on_rate_limit=True)
+	api = tweepy.API(auth)
 	
 	#userID = '965192514' # efly5's twitter
 	userID = '226222147' # mayor pete's twitter -- giving out the wrong number of statuses
