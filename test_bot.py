@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import sys, tweepy
+import sys, tweepy, json
 from time import sleep
 
 def file_tweets():
@@ -22,7 +22,7 @@ def file_tweets():
             sleep(2)
 
 def retweet(rt, fav): 
-    for tweet in tweepy.Cursor(api.search, q='#NDMBB').items(20):
+    for tweet in tweepy.Cursor(api.search, q='#MarchDadness #jimmyfallon').items(7):
         try: 
             if rt == 1:
                 tweet.retweet()
@@ -34,15 +34,37 @@ def retweet(rt, fav):
         except StopIteration: 
             break
 
+def retweet_user(): 
+    for tweet in tweepy.Cursor(api.user_timeline, user_id='267856525').items(50):
+        try: 
+            tweet.retweet()
+            sleep(.5)
+        except tweepy.TweepError as e: 
+            print(e.reason)
+        except StopIteration: 
+            break
+
+def follow(): 
+    for tweet in tweepy.Cursor(api.search, q='Girls Who Code').items(550): 
+        try: 
+            if not tweet.user.following:
+                tweet.user.follow()
+                print("Followed the user")
+        except tweepy.TweepError as e: 
+            print(e.reason)
+        except StopIteration:
+            break
+
 if __name__ == '__main__': 
 
     auth = tweepy.OAuthHandler("sL2BOOaip5M1GZxY9wVJenrtz", "sKrE6ONhuxFE2c1YpaI5BdiDp53N6HL8ILVvubIkbqWQqLMXrh") 
     auth.set_access_token("840213704021049345-X6wFF3URAXSju75ejwY3StLfgtqDIeO", "1XB36ErfJe71f4VnQbrvYVGeVTetKPUwi72VoiBu6HTBo") 
     api = tweepy.API(auth)
 
-    file_tweets()
-    retweet(1, 0)
-
+    #file_tweets()
+    #retweet(1, 0)
+    follow()
+    #retweet_user()
 
 
 
