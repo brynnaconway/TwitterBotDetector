@@ -11,6 +11,7 @@ from textblob import TextBlob
 class BotDetector():
 	def __init__(self, api):
 		self.api = api
+		self.score = 0
 			
 	def find_ratio(self, userID):
 		# find ratio of followers/following
@@ -22,12 +23,20 @@ class BotDetector():
 		print "followers count: ", followers
 		friends = user.friends_count
 		print "friends (number of people following): ", friends
-		return float((float(followers)/float(friends)))
+		try:
+			ratio1 = float((float(followers)/float(friends)))
+			ratio2 = float((float(friends)/float(followers)))
+		except ZeroDivisionError:
+			ratio1 = followers
+			ratio2 = friends
+			self.score += 1
+		print "ratio1: ", ratio1
+		print "ratio2: ", ratio2
+		if ratio1 < 0.3 or ratio2 < 0.3:
+			self.score += 1
+		elif (ratio1 > 0.95 and ratio1 < 1.05) or (ratio2 > 0.95 and ratio2 < 1.05):
+			self.score += 1
 
-		# activity level of user -- how often it tweets and how much it likes other tweets
-	# analyze screenname of user and bio
-	# score function
-	# this currently only gives max of 200 tweets because that is the request max -- trying to figure out how to get around this
 	def num_tweets(self, userID):
 		status = self.api.user_timeline(user_id = userID, include_rts = True, count = 200)
 		count = 0
@@ -52,6 +61,10 @@ class BotDetector():
 			if (datetime.datetime.now() - date).days < 1:
 				date_count += 1
 		print "date count", date_count
+		if date_count > 20 and date_count <= 40:
+			self.score += 1
+		elif date_count > 40:
+			self.score += 2
 
 	# if the user's bio is empty, function will return true
 	def empty_bio(self, userID):
@@ -59,13 +72,10 @@ class BotDetector():
 		for user in user_list:
 			bio = user.description
 		if bio == "":
+			self.score += 0.5
 			return True
 		else:
 			return False
-
-
-
-	
 		
 if __name__ == "__main__":
 	# set up authentication
@@ -76,13 +86,14 @@ if __name__ == "__main__":
 	api = tweepy.API(auth)
 	
 	#userID = '965192514' # efly5's twitter
-	userID = '226222147' # mayor pete's twitter -- giving out the wrong number of statuses
+	#userID = '226222147' # mayor pete's twitter -- giving out the wrong number of statuses
 	botID = '840213704021049345'
+	userID = '3220758997'	# kanye bot
 	#userID = '512021172' # idle hours twitter -- should have 130 followers and 1,226 statuses approx. -- everything is correct for this one
 	bd = BotDetector(api)
-	#print(bd.find_ratio(userID))
+	bd.find_ratio(userID)
 
 	#bd.num_tweets(userID)
-
-	#bd.tweets_per_day(botID)
-	print bd.empty_bio(userID)
+	bd.tweets_per_day(userID)
+	bd.empty_bio(userID)
+	print bd.score
