@@ -17,24 +17,14 @@ class BotDetector():
 		user = self.api.get_user(userID)
 		print user.screen_name
 		follower_ids = []
-		'''C = tweepy.Cursor(self.api.followers, id = userID, count = 200).items()
-		while True:
-			try:
-				follower = C.next()
-				follower_ids.append(follower)
-			except tweepy.TweepError:
-				print "error caught"
-				time.sleep(20)
-				continue
-			except StopIteration:
-				break'''
 
+		# BELOW IS WHAT SHOULD WORK WITH THE PAGE LIMIT ERRORS BUT IS NOT
+		# SO I HAVE THE OLD WAY CURRENTLY UNCOMMENTED
+		# TO TEST, UNCOMMENT THESE LINES BELOW AND COMMENT LINE 30
 		#for page in tweepy.Cursor(self.api.followers, id = userID, count = 200).pages():
-			#for follower in page:
 			#print "in loop"
 			#follower_ids.extend(page)
-			#time.sleep(20)  # keep getting a rate limit error for this stuff
-
+			#time.sleep(20)  # THIS LINE MIGHT NOT BE NECESSARY
 		#followers = len(follower_ids)
 
 		followers = len(self.api.followers_ids(userID))
