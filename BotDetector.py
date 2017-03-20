@@ -52,6 +52,20 @@ class BotDetector():
 			if (datetime.datetime.now() - date).days < 1:
 				date_count += 1
 		print "date count", date_count
+
+	# if the user's bio is empty, function will return true
+	def empty_bio(self, userID):
+		user_list = self.api.lookup_users(user_ids = [userID])
+		for user in user_list:
+			bio = user.description
+		if bio == "":
+			return True
+		else:
+			return False
+
+
+
+	
 		
 if __name__ == "__main__":
 	# set up authentication
@@ -70,4 +84,5 @@ if __name__ == "__main__":
 
 	#bd.num_tweets(userID)
 
-	bd.tweets_per_day(botID)
+	#bd.tweets_per_day(botID)
+	print bd.empty_bio(userID)
