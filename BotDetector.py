@@ -5,7 +5,7 @@
 # Twitter Bot Detector Class
 
 import tweepy, sys
-import time
+import time, datetime
 from textblob import TextBlob
 
 class BotDetector():
@@ -40,6 +40,19 @@ class BotDetector():
 				#print tweet.text.encode('utf-8')
 		print count
 	
+	def time_of_tweets(self, userID):
+		dates = []
+		status = self.api.user_timeline(user_id = userID, include_rts = True, count = 200)
+		count = 0
+		for page in tweepy.Cursor(self.api.user_timeline, user_id = userID, include_rts = True).pages():
+			for tweet in page:
+				dates.append(tweet.created_at)
+		date_count = 0
+		for date in dates:
+			if (datetime.datetime.now() - date).days < 1:
+				date_count += 1
+		print "date count", date_count
+		
 if __name__ == "__main__":
 	# set up authentication
 	auth = tweepy.OAuthHandler('OQvy6pyogx5mxHoIHIHXIIOZh', 'CSXM1Z3UYctTmf4DNL0TtPUD4ecE1AOVc4gJPuSsBYUY8mYnIl')
@@ -50,8 +63,11 @@ if __name__ == "__main__":
 	
 	#userID = '965192514' # efly5's twitter
 	userID = '226222147' # mayor pete's twitter -- giving out the wrong number of statuses
+	botID = '840213704021049345'
 	#userID = '512021172' # idle hours twitter -- should have 130 followers and 1,226 statuses approx. -- everything is correct for this one
 	bd = BotDetector(api)
-	print(bd.find_ratio(userID))
+	#print(bd.find_ratio(userID))
 
-	bd.num_tweets(userID)
+	#bd.num_tweets(userID)
+
+	bd.time_of_tweets(botID)
