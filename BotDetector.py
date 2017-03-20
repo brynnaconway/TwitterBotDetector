@@ -40,7 +40,7 @@ class BotDetector():
 				#print tweet.text.encode('utf-8')
 		print count
 	
-	def time_of_tweets(self, userID):
+	def tweets_per_day(self, userID):
 		dates = []
 		status = self.api.user_timeline(user_id = userID, include_rts = True, count = 200)
 		count = 0
@@ -70,4 +70,4 @@ if __name__ == "__main__":
 
 	#bd.num_tweets(userID)
 
-	bd.time_of_tweets(botID)
+	bd.tweets_per_day(botID)
