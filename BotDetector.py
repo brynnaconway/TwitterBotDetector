@@ -7,6 +7,8 @@
 import tweepy, sys
 import time, datetime
 from textblob import TextBlob
+import math
+import nltk
 
 class BotDetector():
 	def __init__(self, api):
@@ -20,9 +22,9 @@ class BotDetector():
 		follower_ids = []
 
 		followers = user.followers_count
-		print "followers count: ", followers
+		#print "followers count: ", followers
 		friends = user.friends_count
-		print "friends (number of people following): ", friends
+		#print "friends (number of people following): ", friends
 		try:
 			ratio1 = float((float(followers)/float(friends)))
 			ratio2 = float((float(friends)/float(followers)))
@@ -30,11 +32,13 @@ class BotDetector():
 			ratio1 = followers
 			ratio2 = friends
 			self.score += 1
-		print "ratio1: ", ratio1
-		print "ratio2: ", ratio2
+		#print "ratio1: ", ratio1
+		#print "ratio2: ", ratio2
 		if ratio1 < 0.3 or ratio2 < 0.3:
+			print "Point added for follower:friend ratio"
 			self.score += 1
 		elif (ratio1 > 0.95 and ratio1 < 1.05) or (ratio2 > 0.95 and ratio2 < 1.05):
+			print "Point added for follower:friend ratio"
 			self.score += 1
 
 	def num_tweets(self, userID):
@@ -60,10 +64,12 @@ class BotDetector():
 		for date in dates:
 			if (datetime.datetime.now() - date).days < 1:
 				date_count += 1
-		print "date count", date_count
+		#print "date count", date_count
 		if date_count > 20 and date_count <= 40:
+			print "Point added for number of tweets per day"
 			self.score += 1
 		elif date_count > 40:
+			print "2 points added for number of tweets per day"
 			self.score += 2
 
 	# if the user's bio is empty, function will return true
@@ -72,10 +78,22 @@ class BotDetector():
 		for user in user_list:
 			bio = user.description
 		if bio == "":
+			print "1/2 point added for empty bio"
 			self.score += 0.5
 			return True
 		else:
 			return False
+
+	def find_entropy(self, user_id):
+		tweets = []
+		for page in tweepy.Cursor(self.api.user_timeline, user_id = userID, include_rts = True).pages():
+			for tweet in page:
+				tweets.append(tweet)
+
+		freq_dist = nltk.FreqDist(tweets)
+		probs = [freq_dist.freq(l) for l in freq_dist]
+		return -sum(p * math.log(p,2) for p in probs)
+
 		
 if __name__ == "__main__":
 	# set up authentication
@@ -85,10 +103,10 @@ if __name__ == "__main__":
 	# call tweepy API
 	api = tweepy.API(auth)
 	
-	#userID = '965192514' # efly5's twitter
+	userID = '198933002' # grammar police twitter
 	#userID = '226222147' # mayor pete's twitter -- giving out the wrong number of statuses
-	botID = '840213704021049345'
-	userID = '3220758997'	# kanye bot
+	#botID = '840213704021049345'
+	#userID = '3220758997'	# kanye bot
 	#userID = '512021172' # idle hours twitter -- should have 130 followers and 1,226 statuses approx. -- everything is correct for this one
 	bd = BotDetector(api)
 	bd.find_ratio(userID)
@@ -96,4 +114,10 @@ if __name__ == "__main__":
 	#bd.num_tweets(userID)
 	bd.tweets_per_day(userID)
 	bd.empty_bio(userID)
-	print bd.score
+	print "Bot Score: ", bd.score
+	if bd.score > 1:
+		print ""
+		print "This account is most likely a bot."
+	else:
+		print ""
+		print "This account is most likely not a bot."
