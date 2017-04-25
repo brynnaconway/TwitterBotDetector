@@ -92,6 +92,8 @@ class BotDetector():
 
 		freq_dist = nltk.FreqDist(tweets)
 		probs = [freq_dist.freq(l) for l in freq_dist]
+		entropy = -sum(p * math.log(p,2) for p in probs)
+		print entropy
 		return -sum(p * math.log(p,2) for p in probs)
 
 		
@@ -110,7 +112,8 @@ if __name__ == "__main__":
 	#userID = '512021172' # idle hours twitter -- should have 130 followers and 1,226 statuses approx. -- everything is correct for this one
 	bd = BotDetector(api)
 	bd.find_ratio(userID)
-
+	
+	bd.find_entropy(userID)
 	#bd.num_tweets(userID)
 	bd.tweets_per_day(userID)
 	bd.empty_bio(userID)
