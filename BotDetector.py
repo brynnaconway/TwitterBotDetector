@@ -9,6 +9,7 @@ import time, datetime
 from textblob import TextBlob
 import math
 import nltk
+import re
 
 class BotDetector():
 	def __init__(self, api):
@@ -84,17 +85,58 @@ class BotDetector():
 		else:
 			return False
 
-	def find_entropy(self, user_id):
+	def tweet_time_entropy(self, user_id):
 		tweets = []
 		for page in tweepy.Cursor(self.api.user_timeline, user_id = userID, include_rts = True).pages():
 			for tweet in page:
-				tweets.append(tweet)
-
+				t_time = str(tweet.created_at)
+				t_time = t_time.split(" ")
+				t_time = t_time[1]
+				t_time = t_time.split(":")
+				t_time = ':'.join(t_time[:2])
+				tweets.append(t_time)
+		print tweets[2]
 		freq_dist = nltk.FreqDist(tweets)
 		probs = [freq_dist.freq(l) for l in freq_dist]
 		entropy = -sum(p * math.log(p,2) for p in probs)
 		print entropy
 		return -sum(p * math.log(p,2) for p in probs)
+
+	def verified(self, user_id):
+		user = api.get_user(user_id)
+		print user.profile_image_url
+		if user.verified == True:
+			self.score = 0
+			print "User is verified"
+
+	def photo(self, user_id):
+		user = api.get_user(user_id)
+		if user.profile_image_url == "http://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png":
+			self.score += 1
+			print "User has default photo"
+		else:
+			print "User does not have default photo"
+
+	'''
+	def url(self, user_id):
+		tweets = []
+		for page in tweepy.Cursor(self.api.user_timeline, user_id = userID, include_rts = True).pages():
+			for tweet in page:
+				tweets.append(tweet.text)
+
+		url = [".aero", ".asia", ".biz", ".cat", ".com", ".coop", ".edu", ".gov", ".info", ".int", ".jobs", ".mil", ".mobi", ".museum", ".name", ".net", ".org", ".pro", ".tel", ".travel"]
+		url_count = 0
+		for tweet in tweets:
+			url_bool = False
+			print tweet
+			for u in url:
+				if u in tweet:
+					url_bool = True
+					break
+			if url_bool == True:
+				url_count += 1
+		print url_count 
+	'''
 
 		
 if __name__ == "__main__":
@@ -105,18 +147,22 @@ if __name__ == "__main__":
 	# call tweepy API
 	api = tweepy.API(auth)
 	
-	userID = '198933002' # grammar police twitter
-	#userID = '226222147' # mayor pete's twitter -- giving out the wrong number of statuses
-	#botID = '840213704021049345'
+	#userID = '198933002' # grammar police twitter
+	userID = '226222147' # mayor pete's twitter -- giving out the wrong number of statuses
+	#userID = '840213704021049345'
 	#userID = '3220758997'	# kanye bot
 	#userID = '512021172' # idle hours twitter -- should have 130 followers and 1,226 statuses approx. -- everything is correct for this one
 	bd = BotDetector(api)
-	bd.find_ratio(userID)
+	#bd.find_ratio(userID)
 	
-	bd.find_entropy(userID)
+	#bd.tweet_time_entropy(userID)
 	#bd.num_tweets(userID)
-	bd.tweets_per_day(userID)
-	bd.empty_bio(userID)
+	#bd.tweets_per_day(userID)
+	#bd.empty_bio(userID)
+
+	bd.verified(userID)
+	bd.photo(userID)
+
 	print "Bot Score: ", bd.score
 	if bd.score > 1:
 		print ""
