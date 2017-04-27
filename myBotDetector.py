@@ -33,7 +33,7 @@ class BotDetector():
 		if ratio1 < 0.1 or ratio2 < 0.1:
 			ratio_score = 100		
 		elif (ratio1 >= 0.1 and ratio1 < 0.3) or (ratio2 >= 0.1 and ratio2 < 0.3):
-			ratio_score = 85
+			ratio_score = 90
 		elif (ratio1 > 0.85 and ratio1 <= 0.95) or (ratio2 > 0.85 and ratio2 <= 0.95):
 			ratio_score = 50
 		elif (ratio1 > 0.95 and ratio1 < 1.05) or (ratio2 > 0.95 and ratio2 < 1.05):
@@ -79,7 +79,7 @@ class BotDetector():
 			daily_score = 100
 		else:
 			daily_score = 0
-		print("daily_score: {}").format(weight*daily_score)
+		print("daily_score: {}").format(float(weight*daily_score))
 		self.score += float(weight * daily_score)
 
 	# if the user's bio is empty, function will return true
@@ -110,10 +110,10 @@ class BotDetector():
 		entropy = -sum(p * math.log(p,2) for p in probs)
 		#print entropy
 		if entropy < 1: 
-			print("30")
+			print("Entropy extra credit of 30")
 			self.score += 30
 		elif entropy < 3.5: 
-			print("10")
+			print("Entropy extra credit of 10")
 			self.score += 10
 
 
@@ -134,6 +134,25 @@ class BotDetector():
 		print("photo_score: {}").format(weight*photo_score)
 		self.score += float(weight*photo_score)
 
+	def url(self, user_id):
+		tweets = []
+		for page in tweepy.Cursor(self.api.user_timeline, user_id = userID, include_rts = True).pages():
+			for tweet in page:
+				tweets.append(tweet.text)
+
+		url = [".aero", ".asia", ".biz", ".cat", ".com", ".coop", ".edu", ".gov", ".info", ".int", ".jobs", ".mil", ".mobi", ".museum", ".name", ".net", ".org", ".pro", ".tel", ".travel"]
+		url_count = 0
+		for tweet in tweets:
+			url_bool = False
+			print tweet
+			for u in url:
+				if u in tweet:
+					url_bool = True
+					break
+			if url_bool == True:
+				url_count += 1
+		print url_count 
+		
 	# K-Means Clustering of tweets to find similarity
 	# calculate the jaccard distance between two tweets 
 	def calc_jaccard(self, tweet1, tweet2): 
@@ -260,7 +279,7 @@ class BotDetector():
 				runs += 1
 			bot = self.calc_outlier(clusters)
 			if bot:
-				print("20")
+				print("K-Means extra credit of 20")
 				self.score += 20
 		except Exception as e:
 			print("Error")
@@ -313,5 +332,6 @@ if __name__ == "__main__":
 			bd.run_functions(user, tweets)
 			print("{}: {}\n").format(users_dict[user], bd.score)
 		except Exception as e:
-			print(users_dict[user])
-			print(e)
+			pass
+			#print(users_dict[user])
+			#print(e)

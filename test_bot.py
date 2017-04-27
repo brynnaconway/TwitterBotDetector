@@ -1,6 +1,5 @@
 #! /usr/bin/python
-
-import sys, tweepy, json
+import sys, tweepy, json, string, random
 from time import sleep
 
 def file_tweets():
@@ -20,6 +19,16 @@ def file_tweets():
         except Exception as e:
             print(e.reason)
             sleep(2)
+
+def repeat_tweet(tweet, num_tweets):
+	j = 44
+	for i in range(0, num_tweets):
+		tweet = list(tweet)
+		tweet[j] = random.choice(string.ascii_letters)
+		tweet = "".join(tweet) 
+		api.update_status(tweet)
+		i+=1 
+
 
 def retweet(rt, fav): 
     for tweet in tweepy.Cursor(api.search, q='#MarchDadness #jimmyfallon').items(7):
@@ -45,7 +54,7 @@ def retweet_user():
             break
 
 def follow(): 
-    for tweet in tweepy.Cursor(api.search, q='Girls Who Code').items(550): 
+    for tweet in tweepy.Cursor(api.search, q='@kanyewest').items(550): 
         try: 
             if not tweet.user.following:
                 tweet.user.follow()
@@ -61,9 +70,13 @@ if __name__ == '__main__':
     auth.set_access_token("840213704021049345-X6wFF3URAXSju75ejwY3StLfgtqDIeO", "1XB36ErfJe71f4VnQbrvYVGeVTetKPUwi72VoiBu6HTBo") 
     api = tweepy.API(auth)
 
+    tweet = '''Q: How do you count cows?
+    A: With a cowculator.'''
+    num_tweets = 100
+    repeat_tweet(tweet, num_tweets)
     #file_tweets()
     #retweet(1, 0)
-    follow()
+    #follow()
     #retweet_user()
 
 
