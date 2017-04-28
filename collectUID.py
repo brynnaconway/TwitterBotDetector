@@ -8,6 +8,7 @@ class StdOutListener(tweepy.StreamListener):
     def on_data(self, data):
         # Twitter returns data in JSON format - we need to decode it first
         decoded = json.loads(data)
+        print(decoded['user'])
         return True
 
     def on_error(self, status):
@@ -25,4 +26,3 @@ if __name__ == '__main__':
     # In this example follow #programming tag
     # For more details refer to https://dev.twitter.com/docs/streaming-apis
     stream = tweepy.Stream(auth = auth, listener = l)
-    stream.filter(track=['programming'])
