@@ -8,6 +8,7 @@ import tweepy, sys, json, re, time, datetime, numpy
 from textblob import TextBlob
 import math
 import nltk
+import collections
 
 class BotDetector():
 	def __init__(self, api):
@@ -220,7 +221,7 @@ class BotDetector():
 
 	def print_clusters(self, clusters,tweets): 
 		for cluster_id in clusters.keys():
-			print "{}: {}\n".format(cluster_id, clusters[cluster_id])
+			print("{}: {}\n".format(cluster_id, clusters[cluster_id]))
 
 	def calc_outlier(self, clusters):
 		cluster_sizes = []
@@ -272,7 +273,7 @@ class BotDetector():
 				centroids.append(id_num)
 				i+=change
 			runs = 0
-			while not self.converged(old_centroids, centroids) and runs < 20: # keep looping until algorithm converges
+			while not self.converged(old_centroids, centroids) and runs < 15: # keep looping until algorithm converges
 				old_centroids = centroids 
 				clusters = self.calc_clusters(centroids, tweets)
 				centroids = self.calc_centroids(clusters, tweets)
@@ -281,19 +282,42 @@ class BotDetector():
 			if bot:
 				#print("K-Means extra credit of 20")
 				self.score += 20
+				self.malicious = 1
 		except Exception as e:
 			#print("Error")
 			#print(e)
 			return
 
+	def url(self, user_id, tweets):
+    	#url = [".aero", ".asia", ".biz", ".cat", ".com", ".coop", ".edu", ".gov", ".info", ".int", ".jobs", ".mil", ".mobi", ".museum", ".name", ".net", ".org", ".pro", ".tel", ".travel"]
+		count = collections.Counter()
+		for tweet in tweets:
+			tweet = tweet._json
+			try:
+				url = tweet["entities"]["urls"][0]["url"]
+				count[url] += 1
+			except:
+				pass
+		ratio = float(len(count.keys()) / sum(count.values()))
+		if ratio <= 0.05:
+			self.score += 20
+			self.malicious = 1
+		elif ratio <= .1 and ratio > 0.05:
+			self.score += 15
+			self.malicious =1
+		#print(len(count.keys()))
+		#print(sum(count.values()))
+
 	def run_functions(self, user, tweets):
 		self.score = 0
+		self.malicious = 0
 		self.find_ratio(user)
 		self.tweets_per_day(user, tweets)
 		self.empty_bio(user)
 		self.tweet_time_entropy(user, tweets)
 		self.photo(user)
 		self.calc_kmeans(user, tweets)
+		self.url(user, tweets)
 
 
 def ratelimit_handled(cursor):
@@ -303,6 +327,8 @@ def ratelimit_handled(cursor):
 		except tweepy.RateLimitError: 
 			#print("IN")
 			time.sleep(1)
+
+
 
 if __name__ == "__main__":
 	# set up authentication
@@ -314,14 +340,20 @@ if __name__ == "__main__":
 	# call tweepy API
 	api = tweepy.API(auth)
 	user_ids = []
-	users_dict = {'338430862': "sofiapack",'388634815' : "halpal111",'2348883242': "flabbie007" ,'2168848020':"Katherine", '591523652':"Anna",'2490371418':"Leah's Human Friend",'3299372399':"Botgle", '1591657148':"justtosay", '1641959030':"favthingsbot",'10729632':"everyword",'2497458150':"fuckeveryword", '86391789':"bigbenclock", '2418365564':"autocharts", '3277928935':"mothgenerator", '3327104705':"censusamericans", '2452239750':"phasechase", '840213704021049345':"JJ", '3366974463':"autocompletejok", '226222147':"Mayor Pete", '828092750834708480':"tiredwinningyet", '597673958':"Erin's Human Friend", '3220758997': "Kanye Bot", '618294231': "Grammar Bot", '2718522424': "Brynna's Human Friend"}
+	#users_dict = {'338430862': "sofiapack",'388634815' : "halpal111",'2348883242': "flabbie007" ,'2168848020':"Katherine", '591523652':"Anna",'2490371418':"Leah's Human Friend",'3299372399':"Botgle", '1591657148':"justtosay", '1641959030':"favthingsbot",'10729632':"everyword",'2497458150':"fuckeveryword", '86391789':"bigbenclock", '2418365564':"autocharts", '3277928935':"mothgenerator", '3327104705':"censusamericans", '2452239750':"phasechase", '840213704021049345':"JJ", '3366974463':"autocompletejok", '226222147':"Mayor Pete", '828092750834708480':"tiredwinningyet", '597673958':"Erin's Human Friend", '3220758997': "Kanye Bot", '618294231': "Grammar Bot", '2718522424': "Brynna's Human Friend"}
 	#user_ids = ['338430862','388634815','2348883242','2168848020', '591523652', '2490371418', '3299372399', '1591657148', '1641959030','10729632','2497458150', '86391789','2418365564', '3277928935', '3327104705', '2452239750', '840213704021049345', '3366974463', '226222147', '828092750834708480', '597673958', '3220758997', '618294231', '2718522424']
 	for line in open("users.txt"):
 		user_ids.append(line.strip())
 
+	#user_ids = ['977220504']
 	tweets = []
 	bd = BotDetector(api)
 	#print("sofiapack, halpal111, flabbie007, Katherine, Anna Burbank, Leah's Human Friend, botgle, justtosay, favthingsbot, everyword, fuckeveryword, big_ben_clock, autocharts, mothgenerator, censusamericans, phasechase, JJ, Autocompletejok, Mayor Pete, TiredWinningYet, Erin's Human Friend, Kanye Bot, Grammar Police, Brynna's Human Friend")
+	#user = "847110343130337281"
+	#user = "388634815" # human
+	#user = "20528760" # sb tribune
+	#user = "462906227" # weather
+	#user = "1958715110"
 
 	for user in user_ids:
 		tweets[:] = []
@@ -333,8 +365,9 @@ if __name__ == "__main__":
 			verified = bd.verified(user)
 			if verified:
 				continue
+			#print(users_dict[user])
 			bd.run_functions(user, tweets)
-			print("{}:{}").format(user, bd.score)
+			print("{}:{}:{}").format(user, bd.score, bd.malicious)
 		except Exception as e:
 			pass
 			#print(users_dict[user])
