@@ -68,15 +68,11 @@ class BotDetector():
 			if (datetime.datetime.now() - date).days < 1:
 				date_count += 1
 		#print "date count", date_count
-		if date_count > 30 and date_count <= 40:
-			daily_score = 40
-		elif date_count > 40 and date_count <= 50:
-			daily_score = 60
-		elif date_count > 50 and date_count <= 70:
-			daily_score = 80
-		elif date_count > 70 and date_count <= 90:
-			daily_score = 90
-		elif date_count > 90: 
+		if date_count > 60 and date_count <= 70:
+			daily_score = 50
+		elif date_count > 70 and date_count <= 100:
+			daily_score = 70
+		elif date_count > 100: 
 			daily_score = 100
 		else:
 			daily_score = 0
@@ -121,6 +117,8 @@ class BotDetector():
 	def verified(self, user_id):
 		user = api.get_user(user_id)
 		#print user.profile_image_url
+		self.score = 0
+		self.malicious = 0
 		return user.verified
 
 	def photo(self, user_id):
@@ -298,13 +296,16 @@ class BotDetector():
 				count[url] += 1
 			except:
 				pass
-		ratio = float(len(count.keys()) / sum(count.values()))
-		if ratio <= 0.05:
-			self.score += 20
-			self.malicious = 1
-		elif ratio <= .1 and ratio > 0.05:
-			self.score += 15
-			self.malicious =1
+		try:
+			ratio = float(len(count.keys()) / sum(count.values()))
+			if ratio <= 0.05:
+				self.score += 20
+				self.malicious = 1
+			elif ratio <= .1 and ratio > 0.05:
+				self.score += 15
+				self.malicious =1
+		except:
+			return
 		#print(len(count.keys()))
 		#print(sum(count.values()))
 
@@ -325,7 +326,7 @@ def ratelimit_handled(cursor):
 		try: 
 			yield cursor.next()
 		except tweepy.RateLimitError: 
-			#print("IN")
+			print("IN")
 			time.sleep(1)
 
 
@@ -344,8 +345,8 @@ if __name__ == "__main__":
 	#user_ids = ['338430862','388634815','2348883242','2168848020', '591523652', '2490371418', '3299372399', '1591657148', '1641959030','10729632','2497458150', '86391789','2418365564', '3277928935', '3327104705', '2452239750', '840213704021049345', '3366974463', '226222147', '828092750834708480', '597673958', '3220758997', '618294231', '2718522424']
 	for line in open("users.txt"):
 		user_ids.append(line.strip())
-
-	#user_ids = ['977220504']
+	#users_dict = { '226222147': '@PeteButtigieg', '847110343130337281': '@clouisa217', '2527230367' : '@hudsonptweather', '2992503829' : '@TriMediaEE', '18458863' : '@chaoticcarlos' }
+	#user_ids = ['226222147', '847110343130337281', '2527230367', '2992503829', '18458863']
 	tweets = []
 	bd = BotDetector(api)
 	#print("sofiapack, halpal111, flabbie007, Katherine, Anna Burbank, Leah's Human Friend, botgle, justtosay, favthingsbot, everyword, fuckeveryword, big_ben_clock, autocharts, mothgenerator, censusamericans, phasechase, JJ, Autocompletejok, Mayor Pete, TiredWinningYet, Erin's Human Friend, Kanye Bot, Grammar Police, Brynna's Human Friend")
@@ -354,20 +355,17 @@ if __name__ == "__main__":
 	#user = "20528760" # sb tribune
 	#user = "462906227" # weather
 	#user = "1958715110"
-
 	for user in user_ids:
 		tweets[:] = []
-		pages = 0
 		try:
-			for page in ratelimit_handled(tweepy.Cursor(api.user_timeline, user_id = user, include_rts = True, count=200).pages(6)):
-				for tweet in page:
-					tweets.append(tweet)
 			verified = bd.verified(user)
-			if verified:
-				continue
-			#print(users_dict[user])
-			bd.run_functions(user, tweets)
+			if not verified:
+				for page in ratelimit_handled(tweepy.Cursor(api.user_timeline, user_id = user, include_rts = True, count=200).pages(6)):
+					for tweet in page:
+						tweets.append(tweet)
+				bd.run_functions(user, tweets)
 			print("{}:{}:{}").format(user, bd.score, bd.malicious)
+
 		except Exception as e:
 			pass
 			#print(users_dict[user])

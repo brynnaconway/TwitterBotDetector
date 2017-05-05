@@ -21,14 +21,16 @@ def file_tweets():
             sleep(2)
 
 def repeat_tweet(tweet, num_tweets):
-	j = 44
-	for i in range(0, num_tweets):
-		tweet = list(tweet)
-		tweet[j] = random.choice(string.ascii_letters)
-		tweet = "".join(tweet) 
-		api.update_status(tweet)
-		i+=1 
-
+    j = 22
+    for i in range(0, num_tweets):
+        try:
+            tweet = list(tweet)
+            tweet[j] = random.choice(string.ascii_letters)
+            tweet = "".join(tweet) 
+            api.update_status(tweet)
+            i+=1 
+        except: 
+            pass
 
 def retweet(rt, fav): 
     for tweet in tweepy.Cursor(api.search, q='#MarchDadness #jimmyfallon').items(7):
@@ -69,9 +71,9 @@ if __name__ == '__main__':
     auth = tweepy.OAuthHandler("sL2BOOaip5M1GZxY9wVJenrtz", "sKrE6ONhuxFE2c1YpaI5BdiDp53N6HL8ILVvubIkbqWQqLMXrh") 
     auth.set_access_token("840213704021049345-X6wFF3URAXSju75ejwY3StLfgtqDIeO", "1XB36ErfJe71f4VnQbrvYVGeVTetKPUwi72VoiBu6HTBo") 
     api = tweepy.API(auth)
-
-    tweet = '''Q: How do you count cows?
-    A: With a cowculator.'''
+    #tweet = "Why did Mozart sell his chickens? Because they all went Bach Bach Bach!"
+    tweet = '''Q: What do you call a lost nun?
+    #A: A roamin' Catholic.'''
     num_tweets = 100
     repeat_tweet(tweet, num_tweets)
     #file_tweets()
