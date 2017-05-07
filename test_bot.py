@@ -2,6 +2,7 @@
 import sys, tweepy, json, string, random
 from time import sleep
 
+# post tweets from a text file 
 def file_tweets():
     argfile = "bot_tweets.txt" #str(sys.arg[1])
     filename = open(argfile, 'r')
@@ -20,6 +21,7 @@ def file_tweets():
             print(e.reason)
             sleep(2)
 
+# tweet an identical tweet many times 
 def repeat_tweet(tweet, num_tweets):
     j = 22
     for i in range(0, num_tweets):
@@ -32,6 +34,7 @@ def repeat_tweet(tweet, num_tweets):
         except: 
             pass
 
+# retweet all tweets including a specific phrase 
 def retweet(rt, fav): 
     for tweet in tweepy.Cursor(api.search, q='#MarchDadness #jimmyfallon').items(7):
         try: 
@@ -45,6 +48,7 @@ def retweet(rt, fav):
         except StopIteration: 
             break
 
+# retweet 50 of a specific user's tweets 
 def retweet_user(): 
     for tweet in tweepy.Cursor(api.user_timeline, user_id='267856525').items(50):
         try: 
@@ -55,6 +59,7 @@ def retweet_user():
         except StopIteration: 
             break
 
+# follow every user that has tweeted a specific word/phrase 
 def follow(): 
     for tweet in tweepy.Cursor(api.search, q='@kanyewest').items(550): 
         try: 
