@@ -18,7 +18,6 @@ class BotDetector():
 	def find_ratio(self, userID):
 		# find ratio of followers/following
 		user = self.api.get_user(userID)
-		#print(user.screen_name)
 		follower_ids = []
 
 		followers = user.followers_count
@@ -38,25 +37,21 @@ class BotDetector():
 		elif (ratio1 > 0.85 and ratio1 <= 0.95) or (ratio2 > 0.85 and ratio2 <= 0.95):
 			ratio_score = 50
 		elif (ratio1 > 0.95 and ratio1 < 1.05) or (ratio2 > 0.95 and ratio2 < 1.05):
-			#print "Point added for follower:friend ratio"
 			ratio_score = 100
 		elif (ratio1 >= 1.05 and ratio1 < 1.15) or (ratio2 >= 1.05 and ratio2 < 1.15):
 			ratio_score = 50
 		else:
 			ratio_score = 0
 		weight = .40
-		#print("Ratio_score: {}").format(float(weight*ratio_score))
 		self.score += float(weight * ratio_score)
 
 	def num_tweets(self, userID, my_tweets):
 		count = 0
 		for tweet in my_tweets:
 			testimonial = TextBlob(unicode(tweet.text))
-			#print tweet.text.encode('utf-8')
-			#print testimonial.sentiment.subjectivity
 			count += 1
-		#print count
 	
+	# find the number of tweets user posts per day, give score accordingly 
 	def tweets_per_day(self, userID, my_tweets):
 		dates = []
 		count = 0
@@ -67,7 +62,6 @@ class BotDetector():
 		for date in dates:
 			if (datetime.datetime.now() - date).days < 1:
 				date_count += 1
-		#print "date count", date_count
 		if date_count > 60 and date_count <= 70:
 			daily_score = 50
 		elif date_count > 70 and date_count <= 100:
@@ -76,7 +70,6 @@ class BotDetector():
 			daily_score = 100
 		else:
 			daily_score = 0
-		#print("daily_score: {}").format(float(weight*daily_score))
 		self.score += float(weight * daily_score)
 
 	# if the user's bio is empty, function will return true
@@ -90,9 +83,9 @@ class BotDetector():
 			bio_score = 100
 		else:
 			bio_score = 0
-		#print("bio_score: {}").format(weight*bio_score)
 		self.score += float(weight * bio_score)
 
+	# check for variety of time of tweets 
 	def tweet_time_entropy(self, user_id, my_tweets):
 		tweets = []
 		for tweet in my_tweets:
@@ -105,52 +98,28 @@ class BotDetector():
 		freq_dist = nltk.FreqDist(tweets)
 		probs = [freq_dist.freq(l) for l in freq_dist]
 		entropy = -sum(p * math.log(p,2) for p in probs)
-		#print entropy
 		if entropy < 1: 
-			#print("Entropy extra credit of 30")
 			self.score += 30
 		elif entropy < 3.5: 
-			#print("Entropy extra credit of 10")
 			self.score += 10
 
 
+	# if a user is verified, automatically not a bot
 	def verified(self, user_id):
 		user = api.get_user(user_id)
-		#print user.profile_image_url
 		self.score = 0
 		self.malicious = 0
 		return user.verified
 
+	# if a user doesn't have a photo, more likely to be a bot
 	def photo(self, user_id):
 		weight = 0.1
 		user = self.api.get_user(user_id)
 		if user.profile_image_url == "http://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png":
 			photo_score = 100
-			#print "User has default photo"
 		else:
 			photo_score = 0
-			#print "User does not have default photo"
-		#print("photo_score: {}").format(weight*photo_score)
 		self.score += float(weight*photo_score)
-
-	def url(self, user_id):
-		tweets = []
-		for page in tweepy.Cursor(self.api.user_timeline, user_id = userID, include_rts = True).pages():
-			for tweet in page:
-				tweets.append(tweet.text)
-
-		url = [".aero", ".asia", ".biz", ".cat", ".com", ".coop", ".edu", ".gov", ".info", ".int", ".jobs", ".mil", ".mobi", ".museum", ".name", ".net", ".org", ".pro", ".tel", ".travel"]
-		url_count = 0
-		for tweet in tweets:
-			url_bool = False
-			#print tweet
-			for u in url:
-				if u in tweet:
-					url_bool = True
-					break
-			if url_bool == True:
-				url_count += 1
-		#print url_count 
 		
 	# K-Means Clustering of tweets to find similarity
 	# calculate the jaccard distance between two tweets 
@@ -245,7 +214,6 @@ class BotDetector():
 			my_sum = 0
 			for jaccard in jaccards[centroid]:
 				my_sum += jaccard
-			#print(len(jaccards[centroid]))
 			avg = float(my_sum/len(jaccards[centroid]))
 			self.avg_jaccards[centroid] = avg
 
@@ -278,16 +246,13 @@ class BotDetector():
 				runs += 1
 			bot = self.calc_outlier(clusters)
 			if bot:
-				#print("K-Means extra credit of 20")
 				self.score += 20
 				self.malicious = 1
 		except Exception as e:
-			#print("Error")
-			#print(e)
 			return
 
+	# determine if user is tweeting many identical URLs
 	def url(self, user_id, tweets):
-    	#url = [".aero", ".asia", ".biz", ".cat", ".com", ".coop", ".edu", ".gov", ".info", ".int", ".jobs", ".mil", ".mobi", ".museum", ".name", ".net", ".org", ".pro", ".tel", ".travel"]
 		count = collections.Counter()
 		for tweet in tweets:
 			tweet = tweet._json
@@ -306,9 +271,8 @@ class BotDetector():
 				self.malicious =1
 		except:
 			return
-		#print(len(count.keys()))
-		#print(sum(count.values()))
 
+	# run all of the functions used to compute score 
 	def run_functions(self, user, tweets):
 		self.score = 0
 		self.malicious = 0
@@ -333,33 +297,21 @@ def ratelimit_handled(cursor):
 
 if __name__ == "__main__":
 	# set up authentication
-	#auth = tweepy.OAuthHandler('OQvy6pyogx5mxHoIHIHXIIOZh', 'CSXM1Z3UYctTmf4DNL0TtPUD4ecE1AOVc4gJPuSsBYUY8mYnIl')
-	#auth.set_access_token('3083135683-DER2kEd9yhEbf7qY2q58haf6MJE3yTzXlOaw9rJ', 	'lU8PL9RrGpmhaxqxmasWP6wzYBMHfB1fOw0TZYe71A380')
 
 	auth = tweepy.OAuthHandler('MQfvmonUl6Ma0BqIDZPf8TgV8','PlsljRGIeseuQP8q14QdFdXdxycNoD3mEbobMV7DkZlANwnpWR')
 	auth.set_access_token('965192514-d88SjfmStUJ1ydFo3QIFRm6RrH6iyKu7N3X3gz96', 'D1awNzlohgmHVfPw07oeLE2QrVXi4wFKvCeSDinkazvbl')
 	# call tweepy API
 	api = tweepy.API(auth)
 	user_ids = []
-	#users_dict = {'338430862': "sofiapack",'388634815' : "halpal111",'2348883242': "flabbie007" ,'2168848020':"Katherine", '591523652':"Anna",'2490371418':"Leah's Human Friend",'3299372399':"Botgle", '1591657148':"justtosay", '1641959030':"favthingsbot",'10729632':"everyword",'2497458150':"fuckeveryword", '86391789':"bigbenclock", '2418365564':"autocharts", '3277928935':"mothgenerator", '3327104705':"censusamericans", '2452239750':"phasechase", '840213704021049345':"JJ", '3366974463':"autocompletejok", '226222147':"Mayor Pete", '828092750834708480':"tiredwinningyet", '597673958':"Erin's Human Friend", '3220758997': "Kanye Bot", '618294231': "Grammar Bot", '2718522424': "Brynna's Human Friend"}
-	#user_ids = ['338430862','388634815','2348883242','2168848020', '591523652', '2490371418', '3299372399', '1591657148', '1641959030','10729632','2497458150', '86391789','2418365564', '3277928935', '3327104705', '2452239750', '840213704021049345', '3366974463', '226222147', '828092750834708480', '597673958', '3220758997', '618294231', '2718522424']
-	for line in open("users.txt"):
+	for line in open("users2.txt"):
 		user_ids.append(line.strip())
-	#users_dict = { '226222147': '@PeteButtigieg', '847110343130337281': '@clouisa217', '2527230367' : '@hudsonptweather', '2992503829' : '@TriMediaEE', '18458863' : '@chaoticcarlos' }
-	#user_ids = ['226222147', '847110343130337281', '2527230367', '2992503829', '18458863']
 	tweets = []
 	bd = BotDetector(api)
-	#print("sofiapack, halpal111, flabbie007, Katherine, Anna Burbank, Leah's Human Friend, botgle, justtosay, favthingsbot, everyword, fuckeveryword, big_ben_clock, autocharts, mothgenerator, censusamericans, phasechase, JJ, Autocompletejok, Mayor Pete, TiredWinningYet, Erin's Human Friend, Kanye Bot, Grammar Police, Brynna's Human Friend")
-	#user = "847110343130337281"
-	#user = "388634815" # human
-	#user = "20528760" # sb tribune
-	#user = "462906227" # weather
-	#user = "1958715110"
 	for user in user_ids:
 		tweets[:] = []
 		try:
-			verified = bd.verified(user)
-			if not verified:
+			verified = bd.verified(user) # check if user is verified 
+			if not verified: # run functions to give score to unverified users 
 				for page in ratelimit_handled(tweepy.Cursor(api.user_timeline, user_id = user, include_rts = True, count=200).pages(6)):
 					for tweet in page:
 						tweets.append(tweet)
@@ -368,5 +320,4 @@ if __name__ == "__main__":
 
 		except Exception as e:
 			pass
-			#print(users_dict[user])
 			print(e)

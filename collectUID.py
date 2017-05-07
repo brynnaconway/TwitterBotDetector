@@ -38,11 +38,7 @@ if __name__ == '__main__':
     auth = tweepy.OAuthHandler("Xz1swASBUvn63XdoaWyv8pVh8", "3DjVqTTBWhFkb0ls9m4bGVvygQICXqYIWC8ybsU0NZqOcazXdi")
     auth.set_access_token("752284238-aMurTFUTrYE3GHZHciybB7WLds7WrqYjvuMWvLNY", "85ctdbbNSH8EqTdiJiqvIzgkcjTdDxIrXKdyGMqg4mAQ9")
     api = tweepy.API(auth)
-    #print("Showing all new tweets for #programming:")
 
-    # There are different kinds of streams: public stream, user stream, multi-user streams
-    # In this example follow #programming tag
-    # For more details refer to https://dev.twitter.com/docs/streaming-apis
     stream = tweepy.Stream(auth = auth, listener = l)
 
     stream.filter(track=["a", "the", "I", "."], languages=['en'], async=True)
